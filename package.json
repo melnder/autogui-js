@@ -1,0 +1,21 @@
+{
+  "name": "autogui-js",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build:native": "node-gyp configure build",
+    "build:ts": "tsc",
+    "build": "npm run build:native && npm run build:ts",
+    "test:manual": "node test/manual.js",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "node-addon-api": "^8.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.7.0",
+    "node-gyp": "^12.3.0",
+    "typescript": "^6.0.3"
+  }
+}
