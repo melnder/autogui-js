@@ -38,10 +38,25 @@ DWORD ButtonUpFlag(const std::string& button) {
 Napi::Value click(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
-    std::string button = "left";
+    int x = info[0].As<Napi::Number>().Int32Value();
+    int y = info[1].As<Napi::Number>().Int32Value();
+    std::string button = info[2].As<Napi::String>().Utf8Value();
 
-    if (info.Length() >= 1 && info[0].IsString()) {
-        button = info[0].As<Napi::String>().Utf8Value();
+    if(x == -1) {
+        POINT cursorPos;
+        GetCursorPos(&cursorPos);
+        x = cursorPos.x;
+    }
+    if(y == -1) {
+        POINT cursorPos;
+        GetCursorPos(&cursorPos);
+        y = cursorPos.y;
+    }
+
+    BOOL ok = SetCursorPos(x, y);
+    if (!ok) {
+        Napi::Error::New(env, "SetCursorPos failed").ThrowAsJavaScriptException();
+        return env.Null();
     }
 
     INPUT inputs[2] = {};
@@ -90,10 +105,83 @@ Napi::Value press(const Napi::CallbackInfo& info) {
     return Napi::Boolean::New(env, true);
 }
 
+COLORREF GetPixelColor(int x, int y) {
+    HDC hdc = GetDC(NULL);
+    if (hdc == NULL) {
+        ReleaseDC(NULL, hdc);
+        return CLR_INVALID;
+    }
+    COLORREF color = GetPixel(hdc, x, y);
+    if (color == CLR_INVALID) {
+        ReleaseDC(NULL, hdc);
+       return CLR_INVALID;
+    }
+    ReleaseDC(NULL, hdc);
+    return color;
+}
+
+Napi::Value getPixelColor(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsNumber()) {
+        Napi::TypeError::New(env, "getPixelColor(x, y) requires two numbers").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+    int x = info[0].As<Napi::Number>().Int32Value();
+    int y = info[1].As<Napi::Number>().Int32Value();
+    COLORREF color = GetPixelColor(x, y);
+    if (color == CLR_INVALID) {
+        Napi::Error::New(env, "GetPixelColor failed").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    int r = GetRValue(color);
+    int g = GetGValue(color);
+    int b = GetBValue(color);
+
+    Napi::Object result = Napi::Object::New(env);
+    result.Set("r", r);
+    result.Set("g", g);
+    result.Set("b", b);
+    return result;
+}
+
+Napi::Value focusWindow(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsString()) {
+        Napi::TypeError::New(env, "focusWindow(windowName) requires a string").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+    std::string windowName = info[0].As<Napi::String>().Utf8Value();
+    HWND hwnd = FindWindowA(NULL, windowName.c_str());
+    if (hwnd == NULL) {
+        Napi::Error::New(env, "FindWindowA failed").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    WORD VK_ALT = 0x12;
+    INPUT inputs[2] = {};
+    inputs[0].type = INPUT_KEYBOARD;
+    inputs[0].ki.wVk = VK_ALT;
+    inputs[1].type = INPUT_KEYBOARD;
+    inputs[1].ki.wVk = VK_ALT;
+    inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput(1, &inputs[0], sizeof(INPUT));
+    BOOL ok = SetForegroundWindow(hwnd);
+    SendInput(1, &inputs[1], sizeof(INPUT));
+
+    if (!ok) {
+        Napi::Error::New(env, "SetForegroundWindow failed").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+    return Napi::Boolean::New(env, true);
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("moveTo", Napi::Function::New(env, moveTo));
     exports.Set("click", Napi::Function::New(env, click));
     exports.Set("press", Napi::Function::New(env, press));
+    exports.Set("getPixelColor", Napi::Function::New(env, getPixelColor));
+    exports.Set("focusWindow", Napi::Function::New(env, focusWindow));
     return exports;
 }
 

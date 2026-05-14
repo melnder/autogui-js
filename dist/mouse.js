@@ -1,14 +1,19 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.moveTo = moveTo;
-exports.click = click;
-const native_1 = require("./native");
-function moveTo(x, y) {
+import { native } from "./native.js";
+export function moveTo(x, y) {
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
         throw new TypeError("moveTo(x, y) requires finite numbers");
     }
-    native_1.native.moveTo(Math.round(x), Math.round(y));
+    native.moveTo(Math.round(x), Math.round(y));
 }
-function click(button = "left") {
-    native_1.native.click(button);
+export function click(x, y, button) {
+    if (button === undefined) {
+        button = "left";
+    }
+    if (x === undefined) {
+        x = -1;
+    }
+    if (y === undefined) {
+        y = -1;
+    }
+    native.click(x, y, button);
 }
