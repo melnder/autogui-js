@@ -4,4 +4,10 @@ export * as system from "./system.js";
 
 export { moveTo, click } from "./mouse.js";
 export { press, Key } from "./keyboard.js";
-export { getPixelColor, focusWindow } from "./system.js";
+export {
+  getPixelColor,
+  screenshot,
+  ScreenshotImage,
+  focusWindow,
+} from "./system.js";
+export type { Color, ScreenshotOptions, ScreenshotRegion } from "./system.js";
