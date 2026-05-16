@@ -78,6 +78,51 @@ Napi::Value click(const Napi::CallbackInfo& info) {
     return Napi::Boolean::New(env, true);
 }
 
+Napi::Value scroll(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+
+    if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsString()) {
+        Napi::TypeError::New(env, "scroll(steps, direction) requires a number and a direction string").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    int steps = info[0].As<Napi::Number>().Int32Value();
+    std::string direction = info[1].As<Napi::String>().Utf8Value();
+
+    if (steps < 0) {
+        Napi::RangeError::New(env, "scroll steps must be greater than or equal to zero").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    int directionMultiplier = 0;
+    if (direction == "up") {
+        directionMultiplier = 1;
+    } else if (direction == "down") {
+        directionMultiplier = -1;
+    } else {
+        Napi::TypeError::New(env, "scroll direction must be \"up\" or \"down\"").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    if (steps == 0) {
+        return Napi::Boolean::New(env, true);
+    }
+
+    INPUT input = {};
+    input.type = INPUT_MOUSE;
+    input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+    input.mi.mouseData = WHEEL_DELTA * steps * directionMultiplier;
+
+    UINT sent = SendInput(1, &input, sizeof(INPUT));
+
+    if (sent != 1) {
+        Napi::Error::New(env, "SendInput mouse scroll failed").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    return Napi::Boolean::New(env, true);
+}
+
 Napi::Value press(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
@@ -327,6 +372,7 @@ Napi::Value focusWindow(const Napi::CallbackInfo& info) {
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("moveTo", Napi::Function::New(env, moveTo));
     exports.Set("click", Napi::Function::New(env, click));
+    exports.Set("scroll", Napi::Function::New(env, scroll));
     exports.Set("press", Napi::Function::New(env, press));
     exports.Set("getPixelColor", Napi::Function::New(env, getPixelColor));
     exports.Set("screenshot", Napi::Function::New(env, screenshot));

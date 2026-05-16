@@ -7,6 +7,7 @@ type NativeScreenshot = {
 type NativeAddon = {
     moveTo(x: number, y: number): boolean;
     click(x?: number, y?: number, button?: string): boolean;
+    scroll(steps: number, direction: string): boolean;
     press(vkCode: number): boolean;
     getPixelColor(x: number, y: number): {
         r: number;

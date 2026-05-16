@@ -17,3 +17,12 @@ export function click(x, y, button) {
     }
     native.click(x, y, button);
 }
+export function scroll(steps, direction) {
+    if (!Number.isInteger(steps) || steps < 0) {
+        throw new TypeError("scroll(steps, direction) requires a non-negative integer step count");
+    }
+    if (direction !== "up" && direction !== "down") {
+        throw new TypeError('scroll direction must be "up" or "down"');
+    }
+    native.scroll(steps, direction);
+}

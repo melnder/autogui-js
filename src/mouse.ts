@@ -1,6 +1,7 @@
 import { native } from "./native.js";
 
 export type MouseButton = "left" | "right" | "middle";
+export type ScrollDirection = "up" | "down";
 
 export function moveTo(x: number, y: number): void {
   if (!Number.isFinite(x) || !Number.isFinite(y)) {
@@ -21,4 +22,15 @@ export function click(x?: number, y?: number, button?: MouseButton): void {
     y = -1;
   }
   native.click(x, y, button);
+}
+
+export function scroll(steps: number, direction: ScrollDirection): void {
+  if (!Number.isInteger(steps) || steps < 0) {
+    throw new TypeError("scroll(steps, direction) requires a non-negative integer step count");
+  }
+  if (direction !== "up" && direction !== "down") {
+    throw new TypeError('scroll direction must be "up" or "down"');
+  }
+
+  native.scroll(steps, direction);
 }
