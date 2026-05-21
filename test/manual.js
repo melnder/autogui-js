@@ -1,3 +1,4 @@
-import { scroll } from "../dist/index.js"
+import { readDigitsOnScreen } from "../dist/index.js"
 
-scroll(6, "down")
+const res = readDigitsOnScreen(1033, 238, 485, 64)
+console.log(res)

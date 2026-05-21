@@ -43,10 +43,32 @@ function assertRegion(region) {
         height: Math.round(region.height),
     };
 }
+function isObject(value) {
+    return typeof value === "object" && value !== null;
+}
 function isRegion(value) {
+    if (!isObject(value)) {
+        return false;
+    }
     return "x" in value || "y" in value || "width" in value || "height" in value;
 }
-export function screenshot(optionsOrRegion = {}) {
+export function screenshot(optionsOrRegionOrX = {}, y, width, height, path) {
+    if (typeof optionsOrRegionOrX === "number") {
+        const region = assertRegion({
+            x: optionsOrRegionOrX,
+            y,
+            width,
+            height,
+        });
+        if (path !== undefined && typeof path !== "string") {
+            throw new TypeError("screenshot path must be a string");
+        }
+        return new ScreenshotImage(native.screenshot(region.x, region.y, region.width, region.height, path));
+    }
+    if (!isObject(optionsOrRegionOrX)) {
+        throw new TypeError("screenshot(path?), screenshot(region), screenshot(options), or screenshot(x, y, width, height, path?) expected");
+    }
+    const optionsOrRegion = optionsOrRegionOrX;
     const options = isRegion(optionsOrRegion) ? { region: optionsOrRegion } : optionsOrRegion;
     if (options.path !== undefined && typeof options.path !== "string") {
         throw new TypeError("screenshot path must be a string");

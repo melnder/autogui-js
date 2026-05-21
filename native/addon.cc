@@ -108,16 +108,20 @@ Napi::Value scroll(const Napi::CallbackInfo& info) {
         return Napi::Boolean::New(env, true);
     }
 
-    INPUT input = {};
-    input.type = INPUT_MOUSE;
-    input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-    input.mi.mouseData = WHEEL_DELTA * steps * directionMultiplier;
+    for (int i = 0; i < steps; i++) {
+        INPUT input = {};
+        input.type = INPUT_MOUSE;
+        input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+        input.mi.mouseData = WHEEL_DELTA * directionMultiplier;
 
-    UINT sent = SendInput(1, &input, sizeof(INPUT));
+        UINT sent = SendInput(1, &input, sizeof(INPUT));
 
-    if (sent != 1) {
-        Napi::Error::New(env, "SendInput mouse scroll failed").ThrowAsJavaScriptException();
-        return env.Null();
+        if (sent != 1) {
+            Napi::Error::New(env, "SendInput mouse scroll failed").ThrowAsJavaScriptException();
+            return env.Null();
+        }
+
+        Sleep(10);
     }
 
     return Napi::Boolean::New(env, true);

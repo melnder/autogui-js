@@ -34,5 +34,6 @@ export declare function getPixelColor(x: number, y: number): {
 };
 export declare function screenshot(region?: ScreenshotRegion): ScreenshotImage;
 export declare function screenshot(options?: ScreenshotOptions): ScreenshotImage;
+export declare function screenshot(x: number, y: number, width: number, height: number, path?: string): ScreenshotImage;
 export declare function focusWindow(windowName: string): boolean;
 export {};

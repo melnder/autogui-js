@@ -80,13 +80,54 @@ function assertRegion(region: ScreenshotRegion): ScreenshotRegion {
     };
 }
 
-function isRegion(value: ScreenshotOptions | ScreenshotRegion): value is ScreenshotRegion {
+function isObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+}
+
+function isRegion(value: unknown): value is ScreenshotRegion {
+    if (!isObject(value)) {
+        return false;
+    }
+
     return "x" in value || "y" in value || "width" in value || "height" in value;
 }
 
 export function screenshot(region?: ScreenshotRegion): ScreenshotImage;
 export function screenshot(options?: ScreenshotOptions): ScreenshotImage;
-export function screenshot(optionsOrRegion: ScreenshotOptions | ScreenshotRegion = {}): ScreenshotImage {
+export function screenshot(x: number, y: number, width: number, height: number, path?: string): ScreenshotImage;
+export function screenshot(
+    optionsOrRegionOrX: ScreenshotOptions | ScreenshotRegion | number = {},
+    y?: number,
+    width?: number,
+    height?: number,
+    path?: string,
+): ScreenshotImage {
+    if (typeof optionsOrRegionOrX === "number") {
+        const region = assertRegion({
+            x: optionsOrRegionOrX,
+            y,
+            width,
+            height,
+        } as ScreenshotRegion);
+
+        if (path !== undefined && typeof path !== "string") {
+            throw new TypeError("screenshot path must be a string");
+        }
+
+        return new ScreenshotImage(native.screenshot(
+            region.x,
+            region.y,
+            region.width,
+            region.height,
+            path,
+        ));
+    }
+
+    if (!isObject(optionsOrRegionOrX)) {
+        throw new TypeError("screenshot(path?), screenshot(region), screenshot(options), or screenshot(x, y, width, height, path?) expected");
+    }
+
+    const optionsOrRegion = optionsOrRegionOrX;
     const options = isRegion(optionsOrRegion) ? { region: optionsOrRegion } : optionsOrRegion;
 
     if (options.path !== undefined && typeof options.path !== "string") {
